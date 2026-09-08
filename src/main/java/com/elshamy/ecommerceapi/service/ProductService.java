@@ -4,6 +4,7 @@ import com.elshamy.ecommerceapi.dto.CreateProductRequest;
 import com.elshamy.ecommerceapi.dto.ProductDTO;
 import com.elshamy.ecommerceapi.entity.Category;
 import com.elshamy.ecommerceapi.entity.Product;
+import com.elshamy.ecommerceapi.exception.ResourceNotFoundException;
 import com.elshamy.ecommerceapi.repository.CategoryRepository;
 import com.elshamy.ecommerceapi.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -35,11 +36,7 @@ public class ProductService {
     public ProductDTO createProduct(CreateProductRequest request) {
 
         Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Category not found with id: "
-                                        + request.categoryId()
-                        ));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found wit id: " + request.categoryId()));
 
         Product product = new Product();
 
