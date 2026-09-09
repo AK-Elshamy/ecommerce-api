@@ -2,6 +2,8 @@ package com.elshamy.ecommerceapi.service;
 
 
 import com.elshamy.ecommerceapi.dto.AddToCartRequest;
+import com.elshamy.ecommerceapi.dto.CartItemDTO;
+import com.elshamy.ecommerceapi.dto.CartResponseDTO;
 import com.elshamy.ecommerceapi.entity.Cart;
 import com.elshamy.ecommerceapi.entity.CartItem;
 import com.elshamy.ecommerceapi.entity.Product;
@@ -14,6 +16,9 @@ import com.elshamy.ecommerceapi.repository.ProductRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -71,5 +76,60 @@ public class CartService {
     }
 
 
+    public CartResponseDTO getCart() {
+        User user = (User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
 
+        Cart cart = cartRepository.findByUser(user)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("No Cart Exist")
+                );
+
+        var cartItems = cart.getItems();
+
+        List<CartItemDTO> items = cartItems.stream()
+                .map(this::toCartItemDTO)
+                .toList();
+
+        BigDecimal totalAmount = items.stream()
+                .map(CartItemDTO::subtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new CartResponseDTO(items, totalAmount);
+    }
+    private CartItemDTO toCartItemDTO(CartItem item){
+        BigDecimal subtotal = item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+        return new CartItemDTO(
+                item.getProduct().getId(),
+                item.getProduct().getName(),
+                item.getProduct().getPrice(),
+                item.getQuantity(),
+                subtotal
+        );
+    }
+
+
+    public void removeFromCart(Long productId) {
+        User user = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Cart cart = cartRepository.findByUser(user)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User has no cart"));
+
+        CartItem cartItem = cart.getItems()
+                .stream()
+                .filter(item ->
+                        item.getProduct().getId().equals(productId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Product Id: " + productId + " not found in your cart"
+                        ));
+        cart.getItems().remove(cartItem);
+        cartItemRepository.delete(cartItem);
+    }
 }
