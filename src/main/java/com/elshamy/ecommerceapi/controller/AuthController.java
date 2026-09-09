@@ -1,6 +1,8 @@
 package com.elshamy.ecommerceapi.controller;
 
 
+import com.elshamy.ecommerceapi.dto.LoginRequest;
+import com.elshamy.ecommerceapi.dto.LoginResponse;
 import com.elshamy.ecommerceapi.dto.RegisterRequest;
 import com.elshamy.ecommerceapi.service.AuthService;
 import jakarta.validation.Valid;
@@ -24,5 +26,11 @@ public class AuthController {
     public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request){
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 }
