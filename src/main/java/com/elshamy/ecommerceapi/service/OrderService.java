@@ -179,4 +179,55 @@ public class OrderService {
             }
         }
     }
+
+    public List<OrderResponseDTO> getMyOrders(){
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return orderRepository.findByUserOrderByOrderDateDesc(user)
+                .stream()
+                .map(this::toOrderResponseDTO)
+                .toList();
+    }
+
+
+    public OrderResponseDTO getOrderById(Long orderId) {
+        User user = (User) SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Order not found"));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new ResourceNotFoundException("Order not found");
+        }
+
+        return toOrderResponseDTO(order);
+    }
+
+    private OrderResponseDTO toOrderResponseDTO(Order order) {
+
+        List<OrderItemDTO> items = order.getItems()
+                .stream()
+                .map(item -> new OrderItemDTO(
+                        item.getProduct().getName(),
+                        item.getQuantity(),
+                        item.getPriceAtPurchase(),
+                        item.getPriceAtPurchase()
+                                .multiply(BigDecimal.valueOf(item.getQuantity()))
+                ))
+                .toList();
+
+        BigDecimal total = items.stream()
+                .map(OrderItemDTO::subtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new OrderResponseDTO(
+                order.getId(),
+                order.getOrderDate(),
+                order.getStatus().name(),
+                items,
+                total
+        );
+    }
 }
