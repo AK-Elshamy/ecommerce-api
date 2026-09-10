@@ -81,10 +81,16 @@ public class CartService {
                 .getAuthentication()
                 .getPrincipal();
 
-        Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("No Cart Exist")
-                );
+        Optional<Cart> cartOpt = cartRepository.findByUser(user);
+
+        if (cartOpt.isEmpty()) {
+            return new CartResponseDTO(
+                    List.of(),
+                    BigDecimal.ZERO
+            );
+        }
+
+        Cart cart = cartOpt.get();
 
         var cartItems = cart.getItems();
 
@@ -117,8 +123,7 @@ public class CartService {
                 .getPrincipal();
 
         Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User has no cart"));
+                .orElseGet(() -> cartRepository.save(createNewCart(user)));
 
         CartItem cartItem = cart.getItems()
                 .stream()
