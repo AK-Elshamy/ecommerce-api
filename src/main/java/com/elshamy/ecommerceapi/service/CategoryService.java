@@ -3,6 +3,7 @@ package com.elshamy.ecommerceapi.service;
 import com.elshamy.ecommerceapi.dto.CategoryDTO;
 import com.elshamy.ecommerceapi.dto.CreateCategoryRequest;
 import com.elshamy.ecommerceapi.entity.Category;
+import com.elshamy.ecommerceapi.exception.ResourceNotFoundException;
 import com.elshamy.ecommerceapi.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +39,21 @@ public class CategoryService {
         category.setDescription(request.description());
         Category saved = categoryRepository.save(category);
         return toDTO(saved);
+    }
+
+    public CategoryDTO updateCategory(CreateCategoryRequest request, Long id){
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+
+        category.setDescription(request.description());
+        category.setName(request.name());
+        return toDTO(categoryRepository.save(category));
+    }
+    public void deleteCategory(Long id){
+        if(! categoryRepository.existsById(id)){
+            throw new ResourceNotFoundException("Category not found");
+        }
+        categoryRepository.deleteById(id);
     }
 }
 

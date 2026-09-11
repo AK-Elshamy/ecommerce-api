@@ -64,4 +64,31 @@ public class ProductService {
                         : null
         );
     }
+
+    public ProductDTO updateProduct(Long id, CreateProductRequest request) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+
+        product.setCategory(category);
+        product.setName(request.name());
+        product.setDescription(request.description());
+        product.setPrice(request.price());
+        product.setStockQuantity(request.stockQuantity());
+
+
+
+        return toDTO(productRepository.save(product));
+    }
+
+    public void deleteProduct(Long id){
+        if(! productRepository.existsById(id)){
+            throw new ResourceNotFoundException("Product not found");
+        }
+        productRepository.deleteById(id);
+    }
+
 }

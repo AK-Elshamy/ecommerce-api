@@ -2,6 +2,7 @@ package com.elshamy.ecommerceapi.service;
 
 import com.elshamy.ecommerceapi.dto.OrderItemDTO;
 import com.elshamy.ecommerceapi.dto.OrderResponseDTO;
+import com.elshamy.ecommerceapi.dto.UpdateOrderStatusRequest;
 import com.elshamy.ecommerceapi.entity.*;
 import com.elshamy.ecommerceapi.exception.InsufficientStockException;
 import com.elshamy.ecommerceapi.exception.ResourceNotFoundException;
@@ -11,6 +12,7 @@ import com.elshamy.ecommerceapi.repository.OrderItemRepository;
 import com.elshamy.ecommerceapi.repository.OrderRepository;
 import com.elshamy.ecommerceapi.repository.ProductRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -229,5 +231,21 @@ public class OrderService {
                 items,
                 total
         );
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public OrderResponseDTO updateOrderStatus(
+            Long orderId,
+            UpdateOrderStatusRequest request) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Order not found"));
+
+        order.setStatus(request.status());
+
+        orderRepository.save(order);
+
+        return toOrderResponseDTO(order);
     }
 }

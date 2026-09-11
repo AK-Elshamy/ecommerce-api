@@ -2,7 +2,9 @@ package com.elshamy.ecommerceapi.controller;
 
 
 import com.elshamy.ecommerceapi.dto.OrderResponseDTO;
+import com.elshamy.ecommerceapi.dto.UpdateOrderStatusRequest;
 import com.elshamy.ecommerceapi.service.OrderService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,4 +36,12 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<OrderResponseDTO> updateStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody
+            UpdateOrderStatusRequest request){
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, request));
+    }
 }
